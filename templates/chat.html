@@ -188,8 +188,7 @@
             this.cacheDOMElements();
             this.addEventListeners();
             this.updateUIWithConfig();
-            // Load chat history if nicknames match previous session (optional advanced feature)
-            // this.loadChatHistoryFromSessionStorage();
+            this.loadChatHistory();
             this.renderChatHistory();
         },
 
@@ -442,6 +441,32 @@
             messageDiv.appendChild(bubbleDiv);
             this.elements.chatMessagesContainer.appendChild(messageDiv);
             this.elements.chatMessagesContainer.scrollTop = this.elements.chatMessagesContainer.scrollHeight;
+        },
+
+        loadChatHistory() {
+            let self = this;
+            $.ajax({
+                url: "/get_chat_history",
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    chat_id: this.config.chatId
+                })
+            }).done(function(response) {
+                if (response.success && response.data) {
+                    self.chatHistory = response.data.map(item => ({
+                        sender: item.sender,
+                        message: item.content,
+                        avatar: item.sender=== self.config.yourNickname ? self.config.yourAvatar : self.config.theirAvatar,
+                        timestamp: new Date(item.timestamp)
+                    }));
+                    self.renderChatHistory();
+                } else {
+                    console.error("Error loading chat history:", response.error);
+                }
+            }).fail(function(xhr, status, error) {
+                console.error("Failed to load chat history:", error);
+            });
         },
 
         // --- Optional: Session-based Chat History Persistence ---

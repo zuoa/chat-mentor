@@ -105,7 +105,7 @@ def generate_reply():
     chat = Chat.get_by_id_str(chat_id)
     if not chat:
         return jsonify({'success': False, 'error': 'Chat not found'}), 404
-    messages = Message.select().where(Message.chat_id == chat_id).order_by(Message.created_at.asc())
+    messages = Message.select().where(Message.chat_id == chat_id).order_by(Message.created_at.asc()).limit(10)
 
     messages_text = '\n'.join([f"{msg.created_at} [{msg.sender}]: {msg.content}" for msg in messages])
 
@@ -167,6 +167,23 @@ def generate_reply():
     return jsonify({'success': True, 'data': reply})
 
 
+@app.route('/get_chat_history', methods=['POST'])
+def get_chat_history():
+    """获取聊天记录"""
+    chat_id = request.json.get('chat_id')
+    if not chat_id:
+        return jsonify({'success': False, 'error': 'Missing chat_id'}), 400
+
+    size = request.json.get('size', 20)
+
+    chat = Chat.get_by_id_str(chat_id)
+    if not chat:
+        return jsonify({'success': False, 'error': 'Chat not found'}), 404
+
+    messages = Message.select().where(Message.chat_id == chat_id).order_by(Message.created_at.asc()).limit(size)
+    history = [model_to_dict(msg) for msg in messages]
+
+    return jsonify({'success': True, 'data': history})
 
 if __name__ == '__main__':
     create_tables()
