@@ -1,3 +1,4 @@
+import datetime
 import io
 import json
 import os
@@ -31,7 +32,11 @@ def view_chat(chat_id):
             'data': model_to_dict(chat),
         })
     else:
-        return render_template('chat.html', chat_id=chat_id)
+        chat = Chat.get_by_id_str(chat_id)
+        if not chat:
+            return redirect(url_for('error_page', message='Chat not found'))
+        chat_dict = model_to_dict(chat)
+        return render_template('chat.html', chat_id=chat_id, chat=chat_dict)
 
 
 @app.route('/create', methods=['POST'])
@@ -105,7 +110,7 @@ def generate_reply():
     chat = Chat.get_by_id_str(chat_id)
     if not chat:
         return jsonify({'success': False, 'error': 'Chat not found'}), 404
-    messages = Message.select().where(Message.chat_id == chat_id).order_by(Message.created_at.asc()).limit(10)
+    messages = Message.select().where(Message.chat_id == chat_id, Message.created_at > (datetime.datetime.now() - datetime.timedelta(minutes=30))).order_by(Message.created_at.asc())
 
     messages_text = '\n'.join([f"{msg.created_at} [{msg.sender}]: {msg.content}" for msg in messages])
 
@@ -150,9 +155,7 @@ def generate_reply():
     - 回复要简短，尽量20个字内，适合即时聊天工具的交流风格。
     - 避免使用专业术语或复杂的表达方式，确保回复通俗易懂。
     - 只需要生成 [{chat.my_name}] 的回复内容，不需要生成对方视角的回复。
-
-
-
+    
 
 ## 响应要求
 - 直接给出回复内容文本，前后不需要解释或分析，不需要说明理由。

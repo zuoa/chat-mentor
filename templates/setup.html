@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>关系设定 - 异性交流对话指导工具</title>
+    <title>开始你的对话 | ChatMentor</title>
     <script src="https://cdn.tailwindcss.com/3.4.3"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -100,17 +100,8 @@
 
             <div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
                 <label for="dialogueGoal" class="block text-sm font-medium text-slate-700 mb-1">对话目标 <span class="text-red-500">*</span></label>
-                <select id="dialogueGoal" name="dialogueGoal" class="form-select w-full rounded-md shadow-sm py-2 px-3">
-                    <option value="">请选择</option>
-                    <option value="缓解尴尬">缓解尴尬</option>
-                    <option value="制造暧昧">制造暧昧</option>
-                    <option value="表达关心">表达关心</option>
-                    <option value="增进了解">增进了解</option>
-                    <option value="解决矛盾">解决矛盾</option>
-                    <option value="拒绝而不伤人">拒绝而不伤人</option>
-                    <option value="邀约">邀约</option>
-                    <option value="道歉">道歉</option>
-                </select>
+                 <textarea id="dialogueGoal" name="dialogueGoal" rows="3" class="form-textarea w-full rounded-md shadow-sm py-2 px-3" placeholder="例如：制造暧昧、增进了解、拒绝而不伤人"></textarea>
+
                 <p id="dialogueGoalError" class="error-message mt-1"></p>
             </div>
 
