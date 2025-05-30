@@ -1,5 +1,6 @@
 requests
 flask
+peewee
 gunicorn
 openai
 python-dotenv

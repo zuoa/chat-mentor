@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对话指导 - 异性交流对话指导工具</title>
+    <script src="https://cdn.tailwindcss.com/3.4.3"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+        }
+
+        .chat-bubble-me {
+            background-color: #2563eb; /* Tailwind blue-600 */
+            color: white;
+            border-radius: 20px 20px 5px 20px;
+        }
+
+        .chat-bubble-them {
+            background-color: #e5e7eb; /* Tailwind gray-200 */
+            color: #1f2937; /* Tailwind gray-800 */
+            border-radius: 20px 20px 20px 5px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* Tailwind slate-300 */
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* Tailwind slate-400 */
+        }
+
+        .form-input, .form-select, .form-textarea {
+            border-color: #d1d5db; /* Tailwind gray-300 */
+            transition: all 0.15s ease-in-out;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: #3b82f6; /* Tailwind blue-500 */
+            box-shadow: 0 0 0 2px #bfdbfe; /* Tailwind blue-200 */
+        }
+
+        .btn-primary {
+            background-color: #2563eb; /* Tailwind blue-600 */
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8; /* Tailwind blue-700 */
+        }
+
+        .btn-secondary {
+            background-color: #4b5563; /* Tailwind gray-600 */
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #374151; /* Tailwind gray-700 */
+        }
+
+        .btn-success {
+            background-color: #10b981; /* Tailwind emerald-500 */
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #059669; /* Tailwind emerald-600 */
+        }
+
+        .error-message {
+            color: #ef4444; /* Tailwind red-500 */
+            font-size: 0.875rem; /* text-sm */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-0 md:p-4 bg-slate-100">
+
+<div id="app-container" class="w-full max-w-4xl h-screen md:h-auto md:max-h-[90vh] md:min-h-[70vh] bg-white shadow-xl rounded-none md:rounded-lg overflow-hidden flex flex-col">
+
+    <header class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-sky-600 mr-3">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-3.861 8.25-8.625 8.25S3.75 16.556 3.75 12s3.861-8.25 8.625-8.25S21 7.444 21 12Z"/>
+            </svg>
+            <h2 class="text-xl font-semibold text-slate-800">对话指导：<span id="chat-with-name">对方</span></h2>
+        </div>
+    </header>
+
+    <div id="chat-messages" class="chat-messages flex-grow p-4 space-y-4 overflow-y-auto bg-white">
+        <div class="text-center text-slate-400 text-sm">请在下方输入对方的消息开始。</div>
+    </div>
+
+    <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-4 flex-shrink-0">
+        <div>
+            <label for="theirMessageInput" class="block text-sm font-medium text-slate-700 mb-1">
+                输入 <span id="theirNicknameLabel" class="font-semibold">对方</span> 的最新消息:
+            </label>
+            <div class="flex space-x-2">
+                <textarea id="theirMessageInput" rows="2" class="form-textarea flex-grow rounded-md shadow-sm py-2 px-3" placeholder="对方说了什么..."></textarea>
+                <button id="addTheirMessageBtn" class="btn-secondary font-semibold py-2 px-4 rounded-lg shadow-md flex items-center text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                    </svg>
+                    添加
+                </button>
+            </div>
+            <p id="theirMessageInputError" class="error-message mt-1"></p>
+        </div>
+
+        <div class="p-4 border border-sky-200 bg-sky-50 rounded-lg">
+            <button id="getSuggestionBtn" class="w-full btn-success font-semibold py-2 px-4 rounded-lg shadow-md flex items-center justify-center text-sm mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"/>
+                </svg>
+                获取 <span id="yourNicknameLabelSuggestion" class="font-semibold mx-1">你</span> 的回复建议
+            </button>
+            <div id="suggestionContainer" class="hidden">
+                <label for="suggestedReply" class="block text-sm font-medium text-slate-700 mb-1">建议回复 (可编辑):</label>
+                <textarea id="suggestedReply" rows="3" class="form-textarea w-full rounded-md shadow-sm py-2 px-3 bg-white"></textarea>
+                <button id="sendSuggestedReplyBtn" class="mt-2 w-full btn-primary font-semibold py-2 px-4 rounded-lg shadow-md flex items-center justify-center text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/>
+                    </svg>
+                    发送我的回复
+                </button>
+                <p id="suggestedReplyError" class="error-message mt-1"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+    const App = {
+        config: {
+            chatId: window.location.pathname.split('/').pop(), // Extract chat ID from URL
+            yourNickname: '',
+            theirNickname: '',
+            currentRelationship: '',
+            relationshipHistory: '',
+            yourPersonality: '',
+            theirPersonality: '',
+            dialogueGoal: '',
+            yourAvatar: '',
+            theirAvatar: ''
+        },
+        chatHistory: [], // { speaker: 'you' | 'them', text: 'message', avatar: 'url', timestamp: Date }
+
+        elements: {
+            resetSettingsBtn: null,
+            chatWithName: null,
+            chatMessagesContainer: null,
+            theirMessageInput: null,
+            addTheirMessageBtn: null,
+            getSuggestionBtn: null,
+            suggestionContainer: null,
+            suggestedReplyTextarea: null,
+            sendSuggestedReplyBtn: null,
+            yourNicknameLabelSuggestion: null,
+            theirNicknameLabel: null,
+            theirMessageInputError: null,
+            suggestedReplyError: null,
+        },
+
+        init() {
+            this.loadConfig();
+            this.cacheDOMElements();
+            this.addEventListeners();
+            this.updateUIWithConfig();
+            // Load chat history if nicknames match previous session (optional advanced feature)
+            // this.loadChatHistoryFromSessionStorage();
+            this.renderChatHistory();
+        },
+
+        loadConfig() {
+            let self = this;
+            $.ajax({
+                url: window.location.href,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({})
+            }).done(function (response) {
+                console.log(response)
+                if (response.success) {
+                    let config = response.data || {};
+                    console.log(config)
+                    console.log(self.config)
+                    self.config.chatId = config?.id
+                    self.config.yourNickname = config?.my_name
+                    self.config.yourPersonality = config?.my_personality
+                    self.config.yourAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(self.config.yourNickname || 'U1')}&background=2563eb&color=fff&font-size=0.5&length=2`;
+                    self.config.theirNickname = config?.other_name
+                    self.config.theirPersonality = config?.other_personality
+                    self.config.theirAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(self.config.theirNickname || 'U2')}&background=e5e7eb&color=1f2937&font-size=0.5&length=2`;
+                    self.updateUIWithConfig()
+                } else {
+                    console.error("Error loading config:", response.error);
+                    alert('加载配置失败，请稍后再试。');
+                    return;
+                }
+
+            }).fail(function (xhr, status, error) {
+                console.log('Error:', error);
+                console.error("Failed to load config:", error);
+                alert('加载配置失败，请稍后再试。');
+                // Optionally redirect to error page or show a message
+                window.location.href = '/error?message=' + encodeURIComponent('加载配置失败，请稍后再试。');
+            });
+        },
+
+        cacheDOMElements() {
+            this.elements.resetSettingsBtn = document.getElementById('resetSettingsBtn');
+            this.elements.chatWithName = document.getElementById('chat-with-name');
+            this.elements.chatMessagesContainer = document.getElementById('chat-messages');
+            this.elements.theirMessageInput = document.getElementById('theirMessageInput');
+            this.elements.addTheirMessageBtn = document.getElementById('addTheirMessageBtn');
+            this.elements.getSuggestionBtn = document.getElementById('getSuggestionBtn');
+            this.elements.suggestionContainer = document.getElementById('suggestionContainer');
+            this.elements.suggestedReplyTextarea = document.getElementById('suggestedReply');
+            this.elements.sendSuggestedReplyBtn = document.getElementById('sendSuggestedReplyBtn');
+            this.elements.yourNicknameLabelSuggestion = document.getElementById('yourNicknameLabelSuggestion');
+            this.elements.theirNicknameLabel = document.getElementById('theirNicknameLabel');
+            this.elements.theirMessageInputError = document.getElementById('theirMessageInputError');
+            this.elements.suggestedReplyError = document.getElementById('suggestedReplyError');
+        },
+
+        clearAllErrors() {
+            if (this.elements.theirMessageInputError) this.elements.theirMessageInputError.textContent = '';
+            if (this.elements.suggestedReplyError) this.elements.suggestedReplyError.textContent = '';
+            if (this.elements.theirMessageInput) this.elements.theirMessageInput.classList.remove('border-red-500');
+            if (this.elements.suggestedReplyTextarea) this.elements.suggestedReplyTextarea.classList.remove('border-red-500');
+        },
+
+
+        updateUIWithConfig() {
+            if (this.elements.chatWithName) this.elements.chatWithName.textContent = this.config.theirNickname;
+            if (this.elements.yourNicknameLabelSuggestion) this.elements.yourNicknameLabelSuggestion.textContent = this.config.yourNickname;
+            if (this.elements.theirNicknameLabel) this.elements.theirNicknameLabel.textContent = this.config.theirNickname;
+        },
+
+        addEventListeners() {
+            this.elements.addTheirMessageBtn.addEventListener('click', this.handleAddTheirMessage.bind(this));
+            this.elements.getSuggestionBtn.addEventListener('click', this.handleGetSuggestion.bind(this));
+            this.elements.sendSuggestedReplyBtn.addEventListener('click', this.handleSendSuggestedReply.bind(this));
+        },
+
+        handleAddTheirMessage() {
+            const text = this.elements.theirMessageInput.value.trim();
+            this.clearAllErrors();
+
+            if (!text) {
+                this.elements.theirMessageInputError.textContent = '对方消息不能为空';
+                this.elements.theirMessageInput.classList.add('border-red-500');
+                return;
+            }
+
+            const message = {
+                chat_id: this.config.chatId,
+                sender: this.config.theirNickname,
+                message: text,
+                avatar: this.config.theirAvatar,
+                timestamp: new Date().toISOString()
+            };
+
+            let self = this;
+
+            $.ajax({
+                url: "/send",
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(message)
+            }).done(function (response) {
+                console.log(response)
+                if (response.success) {
+                    self.chatHistory.push(message);
+                    self.renderChatMessage(message);
+                    self.elements.theirMessageInput.value = '';
+                    self.elements.suggestionContainer.classList.add('hidden');
+                    self.elements.suggestedReplyTextarea.value = '';
+                } else {
+                    console.error("Error sending reply:", response.error);
+                }
+            })
+
+
+            // this.saveChatHistoryToSessionStorage();
+        },
+
+        handleGetSuggestion() {
+            let self = this;
+            this.generateSimpleSuggestion(function (resp){
+                if (resp.success) {
+                    self.elements.suggestedReplyTextarea.value = resp.data;
+                    self.elements.suggestionContainer.classList.remove('hidden');
+                    self.clearAllErrors();
+                } else {
+                    console.error("Error generating suggestion:", resp.error);
+                    App.elements.suggestedReplyError.textContent = resp.error || '获取建议失败，请稍后再试。';
+                    App.elements.suggestedReplyTextarea.classList.add('border-red-500');
+                }
+            });
+        },
+
+        generateSimpleSuggestion(cb) {
+            let chatId = this.config.chatId || '';
+            $.ajax({
+                url: "/generate_reply",
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({chat_id:chatId})
+            }).done(function (response) {
+                console.log(response)
+                if (response.success) {
+                   cb(response)
+                } else {
+                    console.error("Error loading config:", response.error);
+                    cb({
+                        success: false,
+                        error: response.error || '获取建议失败，请稍后再试。'
+                    })
+                }
+
+            }).fail(function (xhr, status, error) {
+                console.log('Error:', error);
+                cb({
+                    success: false,
+                    error: '获取建议失败，请稍后再试。'
+                });
+            });
+
+        },
+
+        handleSendSuggestedReply() {
+            const text = this.elements.suggestedReplyTextarea.value.trim();
+            this.clearAllErrors();
+            if (!text) {
+                this.elements.suggestedReplyError.textContent = '回复内容不能为空';
+                this.elements.suggestedReplyTextarea.classList.add('border-red-500');
+                return;
+            }
+
+            const message = {
+                chat_id: this.config.chatId,
+                sender: this.config.yourNickname,
+                message: text,
+                avatar: this.config.yourAvatar,
+                timestamp: new Date().toISOString()
+            };
+
+            let self = this;
+
+            $.ajax({
+                url: "/send",
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(message)
+            }).done(function (response) {
+                console.log(response)
+                if (response.success) {
+                    self.chatHistory.push(message);
+                    self.renderChatMessage(message);
+                    self.elements.suggestedReplyTextarea.value = '';
+                    self.elements.suggestionContainer.classList.add('hidden');
+                    self.elements.theirMessageInput.focus();
+                } else {
+                    console.error("Error sending reply:", response.error);
+                }
+            })
+
+        },
+
+        renderChatHistory() {
+            if (!this.elements.chatMessagesContainer) return;
+            this.elements.chatMessagesContainer.innerHTML = ''; // Clear existing messages
+            if (this.chatHistory.length === 0) {
+                this.elements.chatMessagesContainer.innerHTML = '<div class="text-center text-slate-400 text-sm p-4">对话历史为空。请输入对方的第一条消息开始。</div>';
+            } else {
+                this.chatHistory.forEach(message => this.renderChatMessage(message));
+            }
+        },
+
+        renderChatMessage(message) {
+            // If this is the first message, remove the placeholder
+            const placeholder = this.elements.chatMessagesContainer.querySelector('.text-slate-400');
+            if (placeholder) {
+                placeholder.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('flex', 'items-end', 'max-w-[85%]', 'md:max-w-[70%]', 'mb-2');
+
+            const avatarImg = document.createElement('img');
+            avatarImg.src = message.avatar;
+            avatarImg.alt = message.sender;
+            avatarImg.classList.add('w-8', 'h-8', 'rounded-full', 'object-cover', 'flex-shrink-0');
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.classList.add('p-3', 'mx-2', 'shadow', 'break-words'); // Added break-words
+            bubbleDiv.textContent = message.message;
+
+            if (message.sender === this.config.yourNickname) {
+                messageDiv.classList.add('ml-auto', 'flex-row-reverse');
+                bubbleDiv.classList.add('chat-bubble-me');
+                avatarImg.classList.add('ml-2');
+            } else {
+                messageDiv.classList.add('mr-auto');
+                bubbleDiv.classList.add('chat-bubble-them');
+                avatarImg.classList.add('mr-2');
+            }
+
+            messageDiv.appendChild(avatarImg);
+            messageDiv.appendChild(bubbleDiv);
+            this.elements.chatMessagesContainer.appendChild(messageDiv);
+            this.elements.chatMessagesContainer.scrollTop = this.elements.chatMessagesContainer.scrollHeight;
+        },
+
+        // --- Optional: Session-based Chat History Persistence ---
+        // loadChatHistoryFromSessionStorage() {
+        //     const savedHistory = sessionStorage.getItem('chatGuidanceHistory');
+        //     if (savedHistory) {
+        //         try {
+        //             const historyData = JSON.parse(savedHistory);
+        //             // Only restore if nicknames match, otherwise it's a new session
+        //             if (historyData.yourNickname === this.config.yourNickname &&
+        //                 historyData.theirNickname === this.config.theirNickname) {
+        //                 this.chatHistory = historyData.history || [];
+        //             } else {
+        //                 this.chatHistory = []; // Nicknames changed, start fresh
+        //             }
+        //         } catch (e) {
+        //             console.error("Error loading chat history from session:", e);
+        //             this.chatHistory = [];
+        //         }
+        //     }
+        // },
+        // saveChatHistoryToSessionStorage() {
+        //     const historyData = {
+        //         yourNickname: this.config.yourNickname,
+        //         theirNickname: this.config.theirNickname,
+        //         history: this.chatHistory
+        //     };
+        //     sessionStorage.setItem('chatGuidanceHistory', JSON.stringify(historyData));
+        // }
+
+    };
+
+    document.addEventListener('DOMContentLoaded', () => App.init());
+
+</script>
+
+</body>
+</html>
